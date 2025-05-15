@@ -1,2 +1,0 @@
-Essai : construire un tableau au début de l'exécution pour mettre la carte en mémoire
-ça nous met en timeout donc on ne bouge jamais
