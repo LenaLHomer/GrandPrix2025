@@ -7,7 +7,7 @@ List newList() {
     return NULL;
 }
 
-void NodeinList(Node node, List L) {
+void NodeinList(Node* node, List *L) {
     List newCell;
     newCell = malloc(sizeof(List));
     if (newCell == NULL) {

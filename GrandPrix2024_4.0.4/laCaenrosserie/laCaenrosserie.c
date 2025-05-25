@@ -5,6 +5,10 @@
 #define MAX_LINE_LENGTH 1024
 #define BOOSTS_AT_START 5
 
+#include "astar.h"
+#include "ListProjet.h"
+#include "HeapProjet.h"
+#include "follow_line.h"
 
 /**
  * @brief Compute the gas consumption of a requested acceleration
@@ -61,66 +65,118 @@ int pointStatus(int x, int y) {
   return 0;
   /* si dans sable, mettre bool inSand pour fonction gasConsumption */
 }
-int main()
-{
-  int row;
-  int width, height;
-  int gasLevel;
-  int boosts = BOOSTS_AT_START;
-  int round = 0;
-  int accelerationX = 1, accelerationY = 0;
-  int speedX = 0, speedY = 0;
-  char action[100];
-  char line_buffer[MAX_LINE_LENGTH];
-  char** mapData;
 
-  boosts = boosts;    /* Prevent warning "unused variable" */
-  fgets(line_buffer, MAX_LINE_LENGTH, stdin);      
-  
-  /* Read gas level at Start */
-  sscanf(line_buffer, "%d %d %d", &width, &height, &gasLevel);
+Pos2Dint findGoal(char** mapData, int width, int height) {
+    Pos2Dint goal;
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            if (mapData[y][x] == '=') {
+                goal.x = x;
+                goal.y = y;
+                return goal;
+            }
+        }
+    }
+    goal.x = -1;
+    goal.y = -1;
+    return goal;
+}
 
+Node* buildStartNode(int x, int y, int speedX, int speedY) {
+  Node* start = (Node*)malloc(sizeof(Node));
+  start->x = x;
+  start->y = y;
+  start->direction = 0;
+  start->heuristic = 0;
+  start->total_cost = 0;
+  start->parent = NULL;
+  start->nextCell = NULL;
+  return start;
+}
 
-  fprintf(stderr, "=== >Map< ===\n");
-  fprintf(stderr, "Size %d x %d\n", width, height);
-  fprintf(stderr, "Gas at start %d \n\n", gasLevel);
+void computeAcceleration(int myX, int myY, int speedX, int speedY, int targetX, int targetY, int* accX, int* accY) {
+  int nextX = myX + speedX;
+  int nextY = myY + speedY;
+  int dx = targetX - nextX;
+  int dy = targetY - nextY;
 
-  /* Read map data, line per line */
-  /* Put the line in the buffer then display it in stderr */
-  mapData = readMapData(width, height);
+  if (dx > 1) dx = 1;
+  if (dx < -1) dx = -1;
+  if (dy > 1) dy = 1;
+  if (dy < -1) dy = -1;
 
-  fflush(stderr);
-  fprintf(stderr, "\n=== Race start ===\n");
-  while (!feof(stdin)) {
-    int myX, myY, secondX, secondY, thirdX, thirdY;
-    round++;
-    fprintf(stderr, "=== ROUND %d\n", round);
-    fflush(stderr);
-    fgets(line_buffer, MAX_LINE_LENGTH, stdin);   /* Read positions of pilots */
-    sscanf(line_buffer, "%d %d %d %d %d %d",
-           &myX, &myY, &secondX, &secondY, &thirdX, &thirdY);
-    fprintf(stderr, "    Positions: Me(%d,%d)  A(%d,%d), B(%d,%d)\n",
-            myX, myY, secondX, secondY, thirdX, thirdY);
-    fflush(stderr);
-    /* Gas consumption cannot be accurate here. */
-    gasLevel += gasConsumption(accelerationX, accelerationY, speedX, speedY, 0);
+  *accX = dx;
+  *accY = dy;
+}
+void freePath(Node* node) {
+  while(node) {
+    Node* next = node->nextCell;
+    free(node);
+    node = next;
+  }
+}
+
+int main() {
+    int width, height, gasLevel;
+    int speedX = 0, speedY = 0;
+    int accelerationX = 0, accelerationY = 0;
+    char line_buffer[MAX_LINE_LENGTH];
+    char action[100];
+
+    fgets(line_buffer, MAX_LINE_LENGTH, stdin);
+    sscanf(line_buffer, "%d %d %d", &width, &height, &gasLevel);
+    char** mapData = readMapData(height, width);
+
+    Node* grid = (Node*)malloc(width * height * sizeof(Node));
+    for (int y = 0; y < height; y++)
+        for (int x = 0; x < width; x++) {
+            Node* n = &grid[y * width + x];
+            n->x = x;
+            n->y = y;
+            n->id = y * width + x;
+            n->g = n->h = n->f = -1;
+            n->parent = NULL;
+        }
+
+    connectNeighbors(grid, width, height, mapData);
+
+    Node* start = &grid[1 * width + 1];          // ← changer dynamiquement
+    Node* goal  = &grid[(height - 2) * width + (width - 2)];
+
+    int found = AStar(start, goal, grid, width * height);
+
+    if (!found) {
+        fprintf(stderr, "No path found.\n");
+        return 1;
+    }
+
+    // Retrace le chemin
+    List path = NULL;
+    Node* p = goal;
+    while (p != NULL) {
+        NodeinList(p, &path);
+        p = p->parent;
+    }
+
+    // Utilisation de follow_line
+    InfoLine line;
+    initLine(start->x, start->y, goal->x, goal->y, &line);
+    Pos2Dint next;
+    if (nextPoint(&line, &next, 1) > 0) {
+        accelerationX = next.x - start->x - speedX;
+        accelerationY = next.y - start->y - speedY;
+    }
+
+    // Simule 1 tour pour test
     speedX += accelerationX;
     speedY += accelerationY;
-    /* Write the acceleration request to the race manager (stdout). */
+    gasLevel += gasConsumption(accelerationX, accelerationY, speedX, speedY, 0);
     sprintf(action, "%d %d", accelerationX, accelerationY);
-    fprintf(stdout, "%s", action);
-    fflush(stdout);                           /* CAUTION : This is necessary  */
-    fprintf(stderr, "    Action: %s   Gas remaining: %d\n", action, gasLevel);
-    fflush(stderr);
-    if (0 && round > 4) { /* (DISABLED) Force a segfault for testing purpose */
-      int * p = NULL;
-      fprintf(stderr, "Good Bye!\n");
-      fflush(stderr);
-      *p = 0;
-    }
-  }
+    printf("%s", action); fflush(stdout);
 
-  freeMapData(mapData, height);
+    fprintf(stderr, "Action: %s  | Gas: %d\n", action, gasLevel);
 
-  return EXIT_SUCCESS;
+    free(grid);
+    freeMapData(mapData, height);
+    return 0;
 }

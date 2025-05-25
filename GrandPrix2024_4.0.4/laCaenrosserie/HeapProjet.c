@@ -47,11 +47,11 @@ void insertHeap(Heap *h, int element, double priority) {
 }
 
 int getElement(Heap h) {
-    double maximumuPriority = __DBL_MAX__;
+    double maximumPriority = __DBL_MAX__;
     int indice = -1;
     for(int i = 0; i < h.n; i++){
-        if((h.priority[i] != -1) && (h.priority[i] < maximumuPriority)){
-            maximumuPriority = h.priority[i];
+        if((h.priority[i] != -1) && (h.priority[i] < maximumPriority)){
+            maximumPriority = h.priority[i];
             indice = i;
         }
     }

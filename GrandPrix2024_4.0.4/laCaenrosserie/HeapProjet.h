@@ -3,11 +3,11 @@
 
 
 typedef struct sheap{
-    int n; //maximal number of elements
-    int nbElements; //number of elements in the heap
-    int *position; //array of the positions of the elements in the heap
-    int *heap; //array used to implement the heap
-    double *priority; //priority of each element used to insert the elements in the heap
+    int n;
+    int nbElements;
+    int *position;
+    int *heap;
+    double *priority;
 } Heap;
 
 
