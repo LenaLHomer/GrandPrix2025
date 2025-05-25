@@ -3,6 +3,7 @@
 
 #define MAX_NEIGHBORS 4
 
+/* on en a bien besoin ? */
 typedef struct Point{
     int x;
     int y;

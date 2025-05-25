@@ -35,26 +35,6 @@ int gasConsumption(int accX, int accY, int speedX, int speedY, int inSand)
   return -gas;
 }
 
-char** readMapData(int height, int width) {
-  int row;
-  int i;
-  char line_buffer[MAX_LINE_LENGTH];
-  char** mapData;  /* forme mapData[height, width] */
-
-  mapData = (char**)malloc(height*sizeof(char));
-
-  for (row = 0; row < height; ++row) {        
-    fgets(line_buffer, MAX_LINE_LENGTH, stdin);
-    fputs(line_buffer, stderr);
-
-    mapData[row] = (char*)malloc(width*sizeof(char));
-    for (i = 0; i < width; i++) {
-      mapData[row][i] = line_buffer[i];
-    }
-  }
-  return mapData;
-}
-
 void freeMapData(char** mapData, int height) {
   int i;
 
@@ -129,8 +109,13 @@ int main() {
     int width; 
     int height;
     int gasLevel;
-    int speedX = 0, speedY = 0;
-    int accelerationX = 0, accelerationY = 0;
+    int row;
+    int i;
+    int round = 0;
+    int speedX = 0;
+    int speedY = 0;
+    int accelerationX = 0;
+    int accelerationY = 0;
     char line_buffer[MAX_LINE_LENGTH];
     char action[100];
     int x;
@@ -148,7 +133,17 @@ int main() {
 
     fgets(line_buffer, MAX_LINE_LENGTH, stdin);
     sscanf(line_buffer, "%d %d %d", &width, &height, &gasLevel);
-    mapData = readMapData(height, width);
+    fprintf(stderr, "=== >Map< ===\n");
+    fprintf(stderr, "Size %d x %d\n", width, height);
+    fprintf(stderr, "Gas at start %d \n\n", gasLevel);
+
+    mapData = (char**)malloc(height*sizeof(char));
+
+    for (row = 0; row < height; ++row) {   
+      mapData[row] = (char*)malloc(width*sizeof(char));
+      fgets(mapData[row], MAX_LINE_LENGTH, stdin);
+      fprintf(mapData[row], stderr);
+    }
 
     grid = (Node*)malloc(width * height * sizeof(Node));
 
@@ -165,6 +160,8 @@ int main() {
     /* connectNeighbors(grid, width, height, mapData); */
     
     /* faudra mettre le vrai start, qu'on a normalement*/
+    /* récupérer vraies positions via buffer/stderr pour start,
+     * = pour goal */
     start = &grid[1 * width + 1];          /* changer dynamiquement */
     goal  = &grid[(height - 2) * width + (width - 2)];
 
@@ -182,6 +179,7 @@ int main() {
         path = addNodeInList(p, path);  /* nodeInList(p, &path); */
         p = p->parent;
     }
+    /* là on copie juste goal dans path --> à simplifier */
 
     /* Utilisation de follow_line */
     initLine(start->x, start->y, goal->x, goal->y, &line);
@@ -190,15 +188,35 @@ int main() {
         accelerationY = next.y - start->y - speedY;
     }
 
-    /* Simule 1 tour pour test */
-    speedX += accelerationX;
-    speedY += accelerationY;
-    gasLevel += gasConsumption(accelerationX, accelerationY, speedX, speedY, 0);
-    sprintf(action, "%d %d", accelerationX, accelerationY);
-    printf("%s", action); fflush(stdout);
-
-    fprintf(stderr, "Action: %s  | Gas: %d\n", action, gasLevel);
-
+    fprintf(stderr, "\n=== Race start ===\n");
+    while (!feof(stdin)) {
+      int myX, myY, secondX, secondY, thirdX, thirdY;
+      round++;
+      fprintf(stderr, "=== ROUND %d\n", round);
+      fflush(stderr);
+      fgets(line_buffer, MAX_LINE_LENGTH, stdin);   /* Read positions of pilots */
+      sscanf(line_buffer, "%d %d %d %d %d %d",
+            &myX, &myY, &secondX, &secondY, &thirdX, &thirdY);
+      fprintf(stderr, "    Positions: Me(%d,%d)  A(%d,%d), B(%d,%d)\n",
+              myX, myY, secondX, secondY, thirdX, thirdY);
+      fflush(stderr);
+      /* Gas consumption cannot be accurate here. */
+      gasLevel += gasConsumption(accelerationX, accelerationY, speedX, speedY, 0);
+      speedX += accelerationX;
+      speedY += accelerationY;
+      /* Write the acceleration request to the race manager (stdout). */
+      sprintf(action, "%d %d", accelerationX, accelerationY);
+      fprintf(stdout, "%s", action);
+      fflush(stdout);                           /* CAUTION : This is necessary  */
+      fprintf(stderr, "    Action: %s   Gas remaining: %d\n", action, gasLevel);
+      fflush(stderr);
+      if (0 && round > 4) { /* (DISABLED) Force a segfault for testing purpose */
+        int * p = NULL;
+        fprintf(stderr, "Good Bye!\n");
+        fflush(stderr);
+        *p = 0;
+      }
+    }
     free(grid);
     freeMapData(mapData, height);
 

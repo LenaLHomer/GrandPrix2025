@@ -9,20 +9,22 @@
 #define MAX_NEIGHBORS 4
 
 
-
 double heuristic(Node* a, Node* b) {
-    return fabs(a->x - b->x) + fabs(a->y - b->y);
+    return cost(a, b)*((double)(abs(a->x - b->x) + abs(a->y - b->y)));
 }
 
 
 double cost(Node* a, Node* b) {
+    /* à moduler selon le type de point */
     return 1.0;
 }
 
 
 int isInList(List L, Node* n) {
     while (L != NULL) {
-        if (L == n) return 1;
+        if (L == n) {
+            return 1;
+        }
         L = L->nextCell;
     }
     return 0;
