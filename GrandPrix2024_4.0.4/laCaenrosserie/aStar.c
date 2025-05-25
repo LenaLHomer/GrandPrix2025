@@ -34,11 +34,6 @@ int isInHeap(Heap* h, int element) {
 }
 
 
-void nodeInList(Node *node, List* L) {  /* Node *node, List* L */
-    node->nextCell = *L;
-    *L = node;
-}
-
 int lineOfSight(char** map, int width, int height, int x1, int y1, int x2, int y2) {
     InfoLine line;
     Pos2Dint point;
@@ -87,7 +82,7 @@ int aStar(Node* start, Node* goal, Node* nodeArray, int totalNodes, char** map, 
             return 1;
         }
 
-        nodeInList(current, &closed);
+        closed = addNodeInList(current, closed);
 
         for (i = 0; i < current->nbVoisins; i++) {
             neighbor = current->voisins[i];

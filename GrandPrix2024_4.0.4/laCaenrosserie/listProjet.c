@@ -7,15 +7,16 @@ List newList() {
     return NULL;
 }
 
-void nodeInList(Node* node, List *L) {
+List addNodeInList(Node* node, List L) {
     List newCell;
-    newCell = malloc(sizeof(List));
-    if (newCell == NULL) {
-        return;
+    
+    if (L == NULL) {
+        return node;
     }
-    newCell = &node;
+    newCell = node;
     newCell->nextCell = L;
-    L = newCell;
+    
+    return newCell;
 }
 
 

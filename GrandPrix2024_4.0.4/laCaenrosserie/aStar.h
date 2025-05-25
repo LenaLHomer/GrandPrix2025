@@ -12,8 +12,6 @@ int isInList(List L, Node* n);
 
 int isInHeap(Heap* h, int element);
 
-void nodeInList(Node *node, List* L);
-
 int aStar(Node* start, Node* goal, Node* nodeArray, int totalNodes, char** map, int width, int height);
 
 #endif

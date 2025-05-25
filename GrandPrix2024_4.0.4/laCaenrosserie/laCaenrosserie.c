@@ -151,6 +151,7 @@ int main() {
     mapData = readMapData(height, width);
 
     grid = (Node*)malloc(width * height * sizeof(Node));
+
     for (y = 0; y < height; y++)
         for (x = 0; x < width; x++) {
             n = &grid[y * width + x];
@@ -161,9 +162,10 @@ int main() {
             n->parent = NULL;
         }
 
-    connectNeighbors(grid, width, height, mapData);
-
-    start = &grid[1 * width + 1];          /* ← changer dynamiquement */
+    /* connectNeighbors(grid, width, height, mapData); */
+    
+    /* faudra mettre le vrai start, qu'on a normalement*/
+    start = &grid[1 * width + 1];          /* changer dynamiquement */
     goal  = &grid[(height - 2) * width + (width - 2)];
 
     found = aStar(start, goal, grid, width * height, mapData, width, height);
@@ -174,10 +176,10 @@ int main() {
     }
 
     /* Retrace le chemin */
-    path = NULL;
+    path = newList();   
     p = goal;
     while (p != NULL) {
-        nodeInList(p, &path);
+        path = addNodeInList(p, path);  /* nodeInList(p, &path); */
         p = p->parent;
     }
 
@@ -199,5 +201,6 @@ int main() {
 
     free(grid);
     freeMapData(mapData, height);
+
     return 0;
 }

@@ -24,7 +24,7 @@ typedef struct Node {
 
 List newList();
 
-void NodeinList(Node *node, List L);
+List addNodeInList(Node* node, List L);
 
 void freeList(List L);
 

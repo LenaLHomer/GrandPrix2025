@@ -10,6 +10,11 @@ typedef struct sheap{
     double *priority;
 } Heap;
 
+void swap(Heap *h, int i, int j);
+
+Heap* createHeap(int n);
+
+void insertHeap(Heap *h, int element, double priority);
 
 int getElement(Heap h);
 

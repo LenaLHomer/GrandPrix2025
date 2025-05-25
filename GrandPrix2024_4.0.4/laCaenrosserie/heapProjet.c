@@ -55,7 +55,6 @@ int getElement(Heap h) {
     int indice;
     int i;
 
-
     maximumPriority = __DBL_MAX__;
     indice = -1;
     i = 0;
