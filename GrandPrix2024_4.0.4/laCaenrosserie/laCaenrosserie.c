@@ -5,9 +5,9 @@
 #define MAX_LINE_LENGTH 1024
 #define BOOSTS_AT_START 5
 
-#include "astar.h"
-#include "ListProjet.h"
-#include "HeapProjet.h"
+#include "aStar.h"
+#include "listProjet.h"
+#include "heapProjet.h"
 #include "follow_line.h"
 
 /**
@@ -25,7 +25,9 @@
  */
 int gasConsumption(int accX, int accY, int speedX, int speedY, int inSand)
 {
-  int gas = accX * accX + accY * accY;
+  int gas;
+
+  gas = accX * accX + accY * accY;
   gas += (int)(sqrt(speedX * speedX + speedY * speedY) * 3.0 / 2.0);
   if (inSand) {
     gas += 1;
@@ -38,6 +40,7 @@ char** readMapData(int height, int width) {
   int i;
   char line_buffer[MAX_LINE_LENGTH];
   char** mapData;  /* forme mapData[height, width] */
+
   mapData = (char**)malloc(height*sizeof(char));
 
   for (row = 0; row < height; ++row) {        
@@ -68,8 +71,11 @@ int pointStatus(int x, int y) {
 
 Pos2Dint findGoal(char** mapData, int width, int height) {
     Pos2Dint goal;
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    int x;
+    int y;
+
+    for (y = 0; y < height; y++) {
+        for (x = 0; x < width; x++) {
             if (mapData[y][x] == '=') {
                 goal.x = x;
                 goal.y = y;
@@ -83,7 +89,9 @@ Pos2Dint findGoal(char** mapData, int width, int height) {
 }
 
 Node* buildStartNode(int x, int y, int speedX, int speedY) {
-  Node* start = (Node*)malloc(sizeof(Node));
+  Node* start;
+
+  start = (Node*)malloc(sizeof(Node));
   start->x = x;
   start->y = y;
   start->direction = 0;
@@ -91,6 +99,7 @@ Node* buildStartNode(int x, int y, int speedX, int speedY) {
   start->total_cost = 0;
   start->parent = NULL;
   start->nextCell = NULL;
+
   return start;
 }
 
@@ -117,20 +126,34 @@ void freePath(Node* node) {
 }
 
 int main() {
-    int width, height, gasLevel;
+    int width; 
+    int height;
+    int gasLevel;
     int speedX = 0, speedY = 0;
     int accelerationX = 0, accelerationY = 0;
     char line_buffer[MAX_LINE_LENGTH];
     char action[100];
+    int x;
+    int y;
+    char** mapData;
+    Node* grid;
+    Node* start;
+    Node* goal;
+    Node* n;
+    int found;
+    List path;
+    Node* p;
+    InfoLine line;
+    Pos2Dint next;
 
     fgets(line_buffer, MAX_LINE_LENGTH, stdin);
     sscanf(line_buffer, "%d %d %d", &width, &height, &gasLevel);
-    char** mapData = readMapData(height, width);
+    mapData = readMapData(height, width);
 
-    Node* grid = (Node*)malloc(width * height * sizeof(Node));
-    for (int y = 0; y < height; y++)
-        for (int x = 0; x < width; x++) {
-            Node* n = &grid[y * width + x];
+    grid = (Node*)malloc(width * height * sizeof(Node));
+    for (y = 0; y < height; y++)
+        for (x = 0; x < width; x++) {
+            n = &grid[y * width + x];
             n->x = x;
             n->y = y;
             n->id = y * width + x;
@@ -140,34 +163,32 @@ int main() {
 
     connectNeighbors(grid, width, height, mapData);
 
-    Node* start = &grid[1 * width + 1];          // ← changer dynamiquement
-    Node* goal  = &grid[(height - 2) * width + (width - 2)];
+    start = &grid[1 * width + 1];          /* ← changer dynamiquement */
+    goal  = &grid[(height - 2) * width + (width - 2)];
 
-    int found = AStar(start, goal, grid, width * height);
+    found = aStar(start, goal, grid, width * height, mapData, width, height);
 
     if (!found) {
         fprintf(stderr, "No path found.\n");
         return 1;
     }
 
-    // Retrace le chemin
-    List path = NULL;
-    Node* p = goal;
+    /* Retrace le chemin */
+    path = NULL;
+    p = goal;
     while (p != NULL) {
-        NodeinList(p, &path);
+        nodeInList(p, &path);
         p = p->parent;
     }
 
-    // Utilisation de follow_line
-    InfoLine line;
+    /* Utilisation de follow_line */
     initLine(start->x, start->y, goal->x, goal->y, &line);
-    Pos2Dint next;
     if (nextPoint(&line, &next, 1) > 0) {
         accelerationX = next.x - start->x - speedX;
         accelerationY = next.y - start->y - speedY;
     }
 
-    // Simule 1 tour pour test
+    /* Simule 1 tour pour test */
     speedX += accelerationX;
     speedY += accelerationY;
     gasLevel += gasConsumption(accelerationX, accelerationY, speedX, speedY, 0);

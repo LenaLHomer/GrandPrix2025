@@ -3,7 +3,11 @@
 
 void initLine(int x1, int y1, int x2, int y2, InfoLine * infoLine)
 {
-  int adxi, adyi, dxi, dyi;
+  int adxi;
+  int adyi;
+  int dxi;
+  int dyi;
+  
   infoLine->start.x = x1;
   infoLine->start.y = y1;
   infoLine->currentPosition.x = x1 + 0.5;
