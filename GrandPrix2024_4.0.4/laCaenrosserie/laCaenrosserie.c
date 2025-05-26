@@ -157,11 +157,6 @@ int main() {
             n->parent = NULL;
         }
 
-    /* connectNeighbors(grid, width, height, mapData); */
-    
-    /* faudra mettre le vrai start, qu'on a normalement*/
-    /* récupérer vraies positions via buffer/stderr pour start,
-     * = pour goal */
     start = &grid[1 * width + 1];          /* changer dynamiquement */
     goal  = &grid[(height - 2) * width + (width - 2)];
 
@@ -176,10 +171,9 @@ int main() {
     path = newList();   
     p = goal;
     while (p != NULL) {
-        path = addNodeInList(p, path);  /* nodeInList(p, &path); */
+        path = addNodeInList(p, path);
         p = p->parent;
     }
-    /* là on copie juste goal dans path --> à simplifier */
 
     /* Utilisation de follow_line */
     initLine(start->x, start->y, goal->x, goal->y, &line);

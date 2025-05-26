@@ -10,13 +10,19 @@
 
 
 double heuristic(Node* a, Node* b) {
-    return cost(a, b)*((double)(abs(a->x - b->x) + abs(a->y - b->y)));
+    return (double)(abs(a->x - b->x) + abs(a->y - b->y));
 }
 
 
-double cost(Node* a, Node* b) {
-    /* à moduler selon le type de point */
-    return 1.0;
+double cost(Node* a, char** map) {
+    if (map[a->x][a->y] == '.') {
+        return 1.0;
+    }
+    if (map[a->x][a->y] == '~') {
+        return 5.0;
+    }
+    return 100.0;  /* pour remplacer un "infini" lors des
+                    * cas où le point serait inaccessible */
 }
 
 
@@ -91,9 +97,11 @@ int aStar(Node* start, Node* goal, Node* nodeArray, int totalNodes, char** map, 
             if (!lineOfSight(map, width, height, current->x, current->y, neighbor->x, neighbor->y)) {
                 continue;
             }
-            tentative_g = current->g + cost(current, neighbor);
+            tentative_g = current->g + cost(neighbor, map);
 
-            if (isInList(closed, neighbor)) continue;
+            if (isInList(closed, neighbor)) {
+                continue;
+            }
 
             if (neighbor->g == -1 || tentative_g < neighbor->g) {
                 neighbor->g = tentative_g;

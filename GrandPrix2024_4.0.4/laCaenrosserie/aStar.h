@@ -6,7 +6,7 @@
 
 double euristic(Node* a, Node* b);
 
-double cost(Node* a, Node* b);
+double cost(Node* a, char** map);
 
 int isInList(List L, Node* n);
 
